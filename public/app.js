@@ -1,4 +1,16 @@
 (function () {
+  // dvh 미지원 브라우저(구형 WebView 등)에서도 키보드가 떠 있는 실제 보이는
+  // 영역에 맞춰 레이아웃이 줄어들도록 JS로 실제 높이를 보정한다.
+  function setAppHeight() {
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', `${vh}px`);
+  }
+  setAppHeight();
+  window.addEventListener('resize', setAppHeight);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setAppHeight);
+  }
+
   const loginView = document.getElementById('login-view');
   const chatView = document.getElementById('chat-view');
   const loginForm = document.getElementById('login-form');
@@ -55,6 +67,7 @@
   let myNickname = '';
   let isAdmin = false;
   let ws = null;
+  let latestRenderedMessageId = 0; // 화면에 렌더링된 가장 최근 메시지 id (탭이 안 보여도 갱신됨)
 
   // 메시지 id -> DOM 참조 (실시간 갱신용)
   const messageEls = new Map();
@@ -147,6 +160,9 @@
     const time = document.createElement('span');
     time.textContent = formatTime(message.created_at);
     meta.appendChild(time);
+    const unreadBadge = document.createElement('span');
+    unreadBadge.className = 'unread-badge hidden';
+    meta.appendChild(unreadBadge);
     root.appendChild(meta);
 
     const content = document.createElement('div');
@@ -226,13 +242,15 @@
       if (replyForm.classList.contains('open')) replyInput.focus();
     });
 
-    messageEls.set(message.id, { root, content, likeBtn, dislikeBtn, repliesEl });
+    messageEls.set(message.id, { root, content, likeBtn, dislikeBtn, repliesEl, unreadBadge });
     return root;
   }
 
   function appendMessage(message) {
     messageList.appendChild(buildMessageEl(message));
     messageList.scrollTop = messageList.scrollHeight;
+    if (message.id > latestRenderedMessageId) latestRenderedMessageId = message.id;
+    if (document.visibilityState === 'visible') sendReadReceipt(latestRenderedMessageId);
   }
 
   function appendReply(reply) {
@@ -289,6 +307,30 @@
     presenceCountEl.textContent = `👥 ${count}명 접속 중`;
   }
 
+  function updateUnreadCounts(counts) {
+    for (const [idStr, count] of Object.entries(counts)) {
+      const ref = messageEls.get(Number(idStr));
+      if (!ref) continue;
+      if (count > 0) {
+        ref.unreadBadge.textContent = count;
+        ref.unreadBadge.classList.remove('hidden');
+      } else {
+        ref.unreadBadge.classList.add('hidden');
+      }
+    }
+  }
+
+  function sendReadReceipt(messageId) {
+    if (!messageId) return;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'read', lastMessageId: messageId }));
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') sendReadReceipt(latestRenderedMessageId);
+  });
+
   let pendingChatText = null;
 
   function connectWebSocket() {
@@ -298,6 +340,7 @@
 
     ws.addEventListener('open', () => {
       setConnStatus('online');
+      sendReadReceipt(latestRenderedMessageId);
       if (pendingChatText) {
         const textToSend = pendingChatText;
         ws.send(JSON.stringify({ type: 'chat', content: textToSend }));
@@ -320,6 +363,7 @@
       else if (data.type === 'reaction') updateReaction(data.messageId, data.likes, data.dislikes);
       else if (data.type === 'delete') markDeleted(data.target, data.id, data.hidden);
       else if (data.type === 'presence') updatePresence(data.count);
+      else if (data.type === 'unread-update') updateUnreadCounts(data.counts);
       else if (data.type === 'error') alert(data.error);
     });
 
@@ -409,6 +453,7 @@
     pendingChatText = null;
     messageList.innerHTML = '';
     messageEls.clear();
+    latestRenderedMessageId = 0;
     if (!hadUnsentDraft) chatInput.value = ''; // 보내지 못한 초안은 재입장 후 이어 쓸 수 있게 남겨둠
     passwordInput.value = '';
     sendStatus.classList.add('hidden');

@@ -45,6 +45,7 @@ body {
   color: var(--text);
   height: 100vh;
   height: 100dvh; /* 모바일 키보드가 떠도 실제 보이는 영역 기준으로 계산 */
+  height: var(--app-height, 100dvh); /* dvh 미지원 브라우저용 JS 보정값 (app.js) */
 }
 
 .view { height: 100%; }
@@ -99,6 +100,7 @@ body {
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
+  font-size: 16px; /* 16px 미만이면 iOS Safari가 포커스 시 화면을 자동 확대함 */
 }
 
 button {
@@ -261,6 +263,12 @@ button {
   margin-bottom: 4px;
 }
 
+.unread-badge {
+  color: var(--admin);
+  font-weight: 700;
+  font-size: 11px;
+}
+
 .message-content { white-space: pre-wrap; word-break: break-word; }
 
 .message-actions {
@@ -304,7 +312,7 @@ button {
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  font-size: 13px;
+  font-size: 16px; /* 16px 미만이면 iOS Safari가 포커스 시 화면을 자동 확대함 */
 }
 .reply-form button { padding: 6px 10px; font-size: 13px; }
 
@@ -324,6 +332,7 @@ button {
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
+  font-size: 16px; /* 16px 미만이면 iOS Safari가 포커스 시 화면을 자동 확대함 */
 }
 
 .icon-btn {

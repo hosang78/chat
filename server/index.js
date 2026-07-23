@@ -168,6 +168,8 @@ const clients = new Map();
 // 간단한 도배 방지: 세션당 마지막 전송 시각
 const lastSentAt = new Map();
 const MIN_INTERVAL_MS = 400;
+// 세션ID -> 그 세션이 읽은 마지막 메시지 id (현재 접속 중인 세션 기준으로만 집계됨)
+const sessionLastRead = new Map();
 
 function broadcast(payload) {
   const data = JSON.stringify(payload);
@@ -179,6 +181,27 @@ function broadcast(payload) {
 function broadcastPresence() {
   const uniqueSessions = new Set([...clients.values()].map((c) => c.sessionId));
   broadcast({ type: 'presence', count: uniqueSessions.size });
+}
+
+function markSessionRead(sessionId, messageId) {
+  const prev = sessionLastRead.get(sessionId) || 0;
+  if (messageId > prev) sessionLastRead.set(sessionId, messageId);
+}
+
+async function broadcastUnreadCounts() {
+  const connectedSessionIds = [...new Set([...clients.values()].map((c) => c.sessionId))];
+  const result = await pool.query(
+    `SELECT id FROM messages WHERE hidden = false AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 300`
+  );
+  const counts = {};
+  for (const row of result.rows) {
+    let unread = 0;
+    for (const sessionId of connectedSessionIds) {
+      if ((sessionLastRead.get(sessionId) || 0) < row.id) unread++;
+    }
+    counts[row.id] = unread;
+  }
+  broadcast({ type: 'unread-update', counts });
 }
 
 function rateLimited(sessionId) {
@@ -198,6 +221,7 @@ wss.on('connection', (ws, req) => {
   }
   clients.set(ws, { sessionId, ...current });
   broadcastPresence();
+  broadcastUnreadCounts().catch((err) => console.error('안읽음 집계 실패:', err));
 
   ws.on('message', async (raw) => {
     let msg;
@@ -223,6 +247,7 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => {
     clients.delete(ws);
     broadcastPresence();
+    broadcastUnreadCounts().catch((err) => console.error('안읽음 집계 실패:', err));
   });
 });
 
@@ -242,6 +267,16 @@ async function handleClientMessage(ws, client, liveSession, msg) {
       [client.sessionId, liveSession.nickname, liveSession.isAdmin, content]
     );
     broadcast({ type: 'chat', message: { ...result.rows[0], likes: 0, dislikes: 0, replies: [] } });
+    markSessionRead(client.sessionId, result.rows[0].id);
+    await broadcastUnreadCounts();
+    return;
+  }
+
+  if (msg.type === 'read') {
+    const lastMessageId = Number(msg.lastMessageId);
+    if (!lastMessageId) return;
+    markSessionRead(client.sessionId, lastMessageId);
+    await broadcastUnreadCounts();
     return;
   }
 
