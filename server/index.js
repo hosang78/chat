@@ -10,6 +10,7 @@ const { pool } = require('./db');
 const session = require('./session');
 const { containsBannedWord, isReservedNickname } = require('./filter');
 const { randomNickname } = require('./nicknames');
+const { startEmailNotifier } = require('./notifier');
 
 const USER_PASSWORD = process.env.USER_PASSWORD || 'shpoc!';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'suhyup!';
@@ -306,3 +307,5 @@ async function handleClientMessage(ws, client, liveSession, msg) {
 server.listen(PORT, () => {
   console.log(`서버 실행 중: http://localhost:${PORT}`);
 });
+
+startEmailNotifier(pool);

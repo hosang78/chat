@@ -12,6 +12,7 @@
 - 욕설/비방 필터 (메시지·닉네임 공통)
 - 도배 방지용 최소 전송 간격 제한
 - 최소 접속 기록만 저장 (세션ID, 접속 시각) — IP 등 개인 식별 정보 없음
+- 새 메시지 이메일 알림 (1시간마다 확인, 새 메시지가 있을 때만 발송, SMTP 미설정 시 자동 비활성화)
 
 ## 스택
 
@@ -40,6 +41,8 @@ npm start
 | `ADMIN_PASSWORD`  | 관리자 입장 비밀번호                    |
 | `SESSION_SECRET`  | 세션 쿠키 서명용 비밀키 (운영 시 랜덤값으로 교체) |
 | `PORT`            | 서버 포트 (Render는 자동 주입)          |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | 이메일 알림용 SMTP 설정 (Gmail 기준 `smtp.gmail.com` / `465`, `SMTP_PASS`는 구글 앱 비밀번호) |
+| `NOTIFY_EMAIL_TO` | 새 메시지 알림을 받을 이메일 주소. 5개 SMTP 관련 변수 중 하나라도 비어있으면 알림 기능 자체가 꺼짐 |
 
 ## 배포 (Render + Neon)
 
