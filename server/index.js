@@ -176,6 +176,11 @@ function broadcast(payload) {
   }
 }
 
+function broadcastPresence() {
+  const uniqueSessions = new Set([...clients.values()].map((c) => c.sessionId));
+  broadcast({ type: 'presence', count: uniqueSessions.size });
+}
+
 function rateLimited(sessionId) {
   const now = Date.now();
   const last = lastSentAt.get(sessionId) || 0;
@@ -192,6 +197,7 @@ wss.on('connection', (ws, req) => {
     return;
   }
   clients.set(ws, { sessionId, ...current });
+  broadcastPresence();
 
   ws.on('message', async (raw) => {
     let msg;
@@ -216,6 +222,7 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', () => {
     clients.delete(ws);
+    broadcastPresence();
   });
 });
 

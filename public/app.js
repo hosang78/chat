@@ -8,6 +8,7 @@
   const loginWaiting = document.getElementById('login-waiting');
   const myNicknameEl = document.getElementById('my-nickname');
   const connStatusEl = document.getElementById('conn-status');
+  const presenceCountEl = document.getElementById('presence-count');
   const editNicknameBtn = document.getElementById('edit-nickname-btn');
   const logoutBtn = document.getElementById('logout-btn');
   const messageList = document.getElementById('message-list');
@@ -284,6 +285,10 @@
     }
   }
 
+  function updatePresence(count) {
+    presenceCountEl.textContent = `👥 ${count}명 접속 중`;
+  }
+
   let pendingChatText = null;
 
   function connectWebSocket() {
@@ -314,6 +319,7 @@
       else if (data.type === 'reply') appendReply(data.reply);
       else if (data.type === 'reaction') updateReaction(data.messageId, data.likes, data.dislikes);
       else if (data.type === 'delete') markDeleted(data.target, data.id, data.hidden);
+      else if (data.type === 'presence') updatePresence(data.count);
       else if (data.type === 'error') alert(data.error);
     });
 
@@ -406,6 +412,7 @@
     if (!hadUnsentDraft) chatInput.value = ''; // 보내지 못한 초안은 재입장 후 이어 쓸 수 있게 남겨둠
     passwordInput.value = '';
     sendStatus.classList.add('hidden');
+    presenceCountEl.textContent = '';
     myNickname = '';
     isAdmin = false;
     chatView.classList.add('hidden');

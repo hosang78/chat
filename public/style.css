@@ -141,6 +141,17 @@ button {
   font-size: 13px;
   letter-spacing: 0.02em;
   padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.presence-count {
+  font-weight: 600;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 
 .header-top {
