@@ -1,25 +1,33 @@
 :root {
   color-scheme: light dark;
-  --bg: #f5f6f8;
+  --bg: #eaf4f6;
   --panel: #ffffff;
-  --text: #1c1e21;
-  --muted: #6b7280;
-  --border: #e2e4e9;
-  --accent: #2563eb;
-  --admin: #b45309;
+  --text: #0b2a3c;
+  --muted: #56798a;
+  --border: #cfe3e9;
+  --accent: #0e7490;
+  --accent-dark: #0b566e;
+  --admin: #ea580c;
   --danger: #dc2626;
+  --wave-a: #0b566e;
+  --wave-b: #0e7490;
+  --wave-c: #14b8a6;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #15171b;
-    --panel: #1f2227;
-    --text: #f0f1f3;
-    --muted: #9aa1ab;
-    --border: #2b2f36;
-    --accent: #60a5fa;
-    --admin: #fbbf24;
+    --bg: #071e29;
+    --panel: #0f2d3c;
+    --text: #e4f2f5;
+    --muted: #7fa6b5;
+    --border: #1c3f4d;
+    --accent: #22d3ee;
+    --accent-dark: #0891b2;
+    --admin: #fb923c;
     --danger: #f87171;
+    --wave-a: #072430;
+    --wave-b: #0b3a4a;
+    --wave-c: #0e7490;
   }
 }
 
@@ -48,18 +56,32 @@ body {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(20, 184, 166, 0.15), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(14, 116, 144, 0.15), transparent 45%),
+    var(--bg);
 }
 
 .login-box {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 32px;
   max-width: 420px;
   width: 100%;
+  box-shadow: 0 10px 30px rgba(11, 42, 60, 0.08);
 }
 
-.login-box h1 { font-size: 20px; margin: 0 0 16px; }
+.brand-mark {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.login-box h1 {
+  font-size: 20px;
+  margin: 0 0 16px;
+  color: var(--accent-dark);
+}
 
 .notice {
   font-size: 13px;
@@ -91,7 +113,7 @@ button {
 
 .link-btn {
   background: none;
-  color: var(--accent);
+  color: var(--accent-dark);
   padding: 4px 8px;
   font-weight: 500;
   font-size: 13px;
@@ -105,12 +127,20 @@ button {
   flex-direction: column;
   max-width: 720px;
   margin: 0 auto;
+  background: var(--bg);
 }
 
 .chat-header {
-  border-bottom: 1px solid var(--border);
-  background: var(--panel);
   flex-shrink: 0;
+}
+
+.brand-bar {
+  background: linear-gradient(120deg, var(--wave-a), var(--wave-b) 60%, var(--wave-c));
+  color: #eafcff;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  padding: 8px 16px;
 }
 
 .header-top {
@@ -118,6 +148,8 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
 }
 
 .header-actions { display: flex; gap: 4px; }
@@ -128,11 +160,15 @@ button {
 .badge-admin {
   font-size: 11px;
   background: var(--admin);
-  color: #1c1e21;
-  padding: 1px 6px;
+  color: #fff;
+  padding: 1px 8px;
   border-radius: 999px;
   margin-left: 6px;
   font-weight: 700;
+}
+
+.badge-admin::before {
+  content: "🛟 ";
 }
 
 .banner {
@@ -140,11 +176,19 @@ button {
   color: #92400e;
   font-size: 13px;
   padding: 8px 16px;
-  border-top: 1px solid var(--border);
 }
 
 @media (prefers-color-scheme: dark) {
   .banner { background: #3a2f13; color: #fbbf24; }
+}
+
+.wave-divider {
+  height: 12px;
+  background-image:
+    radial-gradient(circle at 10px -5px, transparent 12px, var(--panel) 13px);
+  background-size: 24px 16px;
+  background-repeat: repeat-x;
+  background-position: bottom;
 }
 
 .message-list {
@@ -159,11 +203,12 @@ button {
 .message {
   background: var(--panel);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--wave-c);
   border-radius: 10px;
   padding: 10px 14px;
 }
 
-.message.deleted { opacity: 0.6; font-style: italic; }
+.message.deleted { opacity: 0.6; font-style: italic; border-left-color: var(--border); }
 
 .message-meta {
   display: flex;
@@ -192,7 +237,7 @@ button {
   padding: 2px 6px;
 }
 
-.message-actions button.active { color: var(--accent); font-weight: 700; }
+.message-actions button.active { color: var(--accent-dark); font-weight: 700; }
 .message-actions .delete-btn:hover { color: var(--danger); }
 
 .replies {

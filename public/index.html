@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>블라인드 채팅방</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%93%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <!-- 입장 화면 -->
   <div id="login-view" class="view">
     <div class="login-box">
+      <div class="brand-mark">⚓</div>
       <h1>블라인드 채팅방</h1>
       <p class="notice">
         본 채팅방은 익명으로 운영됩니다.<br />
@@ -29,6 +31,7 @@
   <!-- 채팅 화면 -->
   <div id="chat-view" class="view hidden">
     <header class="chat-header">
+      <div class="brand-bar">⚓ 블라인드 채팅방</div>
       <div class="header-top">
         <span id="my-nickname" class="nickname"></span>
         <div class="header-actions">
@@ -39,6 +42,7 @@
       <div class="banner">
         ⚠️ 고객정보·업무관련 중요정보 등은 본 채팅방에 남기지 마세요. 해당 내용은 사내 메신저 또는 유선으로 전달해 주세요.
       </div>
+      <div class="wave-divider" aria-hidden="true"></div>
     </header>
 
     <main id="message-list" class="message-list"></main>
