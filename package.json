@@ -1,0 +1,18 @@
+{
+  "name": "blind-chat-poc",
+  "version": "1.0.0",
+  "description": "사내 익명 블라인드 채팅방 POC",
+  "private": true,
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "migrate": "node server/migrate.js"
+  },
+  "dependencies": {
+    "cookie": "^0.6.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.12.0",
+    "ws": "^8.18.0"
+  }
+}

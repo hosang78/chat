@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>블라인드 채팅방</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- 입장 화면 -->
+  <div id="login-view" class="view">
+    <div class="login-box">
+      <h1>블라인드 채팅방</h1>
+      <p class="notice">
+        본 채팅방은 익명으로 운영됩니다.<br />
+        대화 내용과 최소한의 접속 기록(접속 시각, 세션 식별자 등, 보안·운영 목적)만 보관되며,
+        그 외 개인을 특정하는 정보는 남기지 않습니다.<br />
+        욕설·비방 등 부적절한 게시물은 관리자가 삭제할 수 있으며, 문제가 지속·반복될 경우
+        채팅방이 종료되고 이후 의견 수렴은 사내 메신저 또는 전화로 받습니다.
+      </p>
+      <form id="login-form">
+        <input type="password" id="password-input" placeholder="비밀번호" autocomplete="off" required />
+        <button type="submit">입장하기</button>
+      </form>
+      <p id="login-error" class="error"></p>
+    </div>
+  </div>
+
+  <!-- 채팅 화면 -->
+  <div id="chat-view" class="view hidden">
+    <header class="chat-header">
+      <div class="header-top">
+        <span id="my-nickname" class="nickname"></span>
+        <button id="edit-nickname-btn" class="link-btn">닉네임 변경</button>
+      </div>
+      <div class="banner">
+        ⚠️ 고객정보·업무관련 중요정보 등은 본 채팅방에 남기지 마세요. 해당 내용은 사내 메신저 또는 유선으로 전달해 주세요.
+      </div>
+    </header>
+
+    <main id="message-list" class="message-list"></main>
+
+    <form id="chat-form" class="chat-form">
+      <input type="text" id="chat-input" placeholder="메시지를 입력하세요" maxlength="1000" autocomplete="off" />
+      <button type="submit">보내기</button>
+    </form>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
