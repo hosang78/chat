@@ -9,6 +9,42 @@
   const messageList = document.getElementById('message-list');
   const chatForm = document.getElementById('chat-form');
   const chatInput = document.getElementById('chat-input');
+  const emojiToggleBtn = document.getElementById('emoji-toggle-btn');
+  const emojiPanel = document.getElementById('emoji-panel');
+
+  const EMOJIS = [
+    '😀', '😂', '😅', '😍', '😢', '😭', '😡', '😱',
+    '👍', '👎', '🙏', '👏', '🙌', '💪', '🤝', '✌️',
+    '❤️', '🔥', '🎉', '👀', '🤔', '😴', '☕', '💡',
+  ];
+
+  function renderEmojiPanel() {
+    EMOJIS.forEach((emoji) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = emoji;
+      btn.addEventListener('click', () => {
+        insertAtCursor(chatInput, emoji);
+        emojiPanel.classList.add('hidden');
+        chatInput.focus();
+      });
+      emojiPanel.appendChild(btn);
+    });
+  }
+
+  function insertAtCursor(input, text) {
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    input.value = input.value.slice(0, start) + text + input.value.slice(end);
+    const cursor = start + text.length;
+    input.setSelectionRange(cursor, cursor);
+  }
+
+  emojiToggleBtn.addEventListener('click', () => {
+    emojiPanel.classList.toggle('hidden');
+  });
+
+  renderEmojiPanel();
 
   let myNickname = '';
   let isAdmin = false;
@@ -275,6 +311,7 @@
 
   chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    emojiPanel.classList.add('hidden');
     const text = chatInput.value.trim();
     if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
     ws.send(JSON.stringify({ type: 'chat', content: text }));
