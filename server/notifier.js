@@ -59,7 +59,7 @@ function startEmailNotifier(pool) {
         await transporter.sendMail({
           from,
           to,
-          subject: `블라인드 채팅방 새 메시지 ${count}건`,
+          subject: `Ai PoC 블라인드 채팅방 새 메시지 ${count}건`,
           text: `지난 1시간 동안 새 메시지 ${count}건이 등록되었습니다.\n\n${lines.join('\n')}${more}`,
         });
       }
