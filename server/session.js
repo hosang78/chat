@@ -24,6 +24,10 @@ function updateNickname(sessionId, nickname) {
   return true;
 }
 
+function destroySession(sessionId) {
+  sessions.delete(sessionId);
+}
+
 function sign(sessionId) {
   const sig = crypto.createHmac('sha256', SESSION_SECRET).update(sessionId).digest('hex');
   return `${sessionId}.${sig}`;
@@ -43,4 +47,4 @@ function verify(cookieValue) {
   return sessionId;
 }
 
-module.exports = { COOKIE_NAME, createSession, getSession, updateNickname, sign, verify };
+module.exports = { COOKIE_NAME, createSession, getSession, updateNickname, destroySession, sign, verify };

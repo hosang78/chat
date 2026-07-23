@@ -6,6 +6,7 @@
   const loginError = document.getElementById('login-error');
   const myNicknameEl = document.getElementById('my-nickname');
   const editNicknameBtn = document.getElementById('edit-nickname-btn');
+  const logoutBtn = document.getElementById('logout-btn');
   const messageList = document.getElementById('message-list');
   const chatForm = document.getElementById('chat-form');
   const chatInput = document.getElementById('chat-input');
@@ -238,6 +239,8 @@
     }
   }
 
+  let loggedOut = false;
+
   function connectWebSocket() {
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${protocol}://${location.host}/ws`);
@@ -252,7 +255,7 @@
     });
 
     ws.addEventListener('close', () => {
-      setTimeout(connectWebSocket, 2000);
+      if (!loggedOut) setTimeout(connectWebSocket, 2000);
     });
   }
 
@@ -265,6 +268,7 @@
   }
 
   async function enterChat(nickname, admin) {
+    loggedOut = false;
     myNickname = nickname;
     isAdmin = admin;
     renderNicknameHeader();
@@ -307,6 +311,24 @@
     }
     myNickname = data.nickname;
     renderNicknameHeader();
+  });
+
+  logoutBtn.addEventListener('click', async () => {
+    if (!confirm('로그아웃하시겠어요?')) return;
+    loggedOut = true;
+    await fetch('/api/logout', { method: 'POST' }).catch(() => {});
+    if (ws) {
+      ws.close();
+      ws = null;
+    }
+    messageList.innerHTML = '';
+    messageEls.clear();
+    chatInput.value = '';
+    passwordInput.value = '';
+    myNickname = '';
+    isAdmin = false;
+    chatView.classList.add('hidden');
+    loginView.classList.remove('hidden');
   });
 
   chatForm.addEventListener('submit', (e) => {

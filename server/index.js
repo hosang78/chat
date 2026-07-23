@@ -79,6 +79,18 @@ app.get('/api/me', requireSession, (req, res) => {
   res.json({ nickname: req.currentSession.nickname, isAdmin: req.currentSession.isAdmin });
 });
 
+app.post('/api/logout', requireSession, (req, res) => {
+  session.destroySession(req.sessionId);
+  for (const [ws, client] of clients) {
+    if (client.sessionId === req.sessionId) ws.close(4002, '로그아웃');
+  }
+  res.setHeader(
+    'Set-Cookie',
+    cookie.serialize(session.COOKIE_NAME, '', { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 0 })
+  );
+  res.json({ ok: true });
+});
+
 // --- 닉네임 변경 (관리자 제외) ---
 app.post('/api/nickname', requireSession, (req, res) => {
   if (req.currentSession.isAdmin) {

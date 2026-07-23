@@ -120,6 +120,8 @@ button {
   padding: 10px 16px;
 }
 
+.header-actions { display: flex; gap: 4px; }
+
 .nickname { font-weight: 700; }
 .nickname.admin-name { color: var(--admin); }
 
