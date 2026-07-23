@@ -9,7 +9,29 @@
   window.addEventListener('resize', setAppHeight);
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', setAppHeight);
+    window.visualViewport.addEventListener('scroll', setAppHeight);
   }
+
+  // 일부 안드로이드 브라우저(삼성 인터넷 등)는 키보드에 자동완성/추천 툴바가
+  // 붙을 때 visualViewport 값이 키보드 애니메이션이 다 끝난 후에야, 또는
+  // 여러 단계로 나눠 갱신된다. resize 이벤트 하나만 믿지 않고, 입력창에
+  // 포커스가 들고날 때 몇 차례 더 재계산해서 최종 값에 맞춘다.
+  document.addEventListener(
+    'focusin',
+    (e) => {
+      if (e.target.tagName !== 'INPUT') return;
+      [50, 150, 300, 500, 800].forEach((delay) => setTimeout(setAppHeight, delay));
+    },
+    true
+  );
+  document.addEventListener(
+    'focusout',
+    (e) => {
+      if (e.target.tagName !== 'INPUT') return;
+      [50, 150, 300, 500].forEach((delay) => setTimeout(setAppHeight, delay));
+    },
+    true
+  );
 
   const loginView = document.getElementById('login-view');
   const chatView = document.getElementById('chat-view');
