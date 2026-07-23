@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS messages (
   content     TEXT NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at  TIMESTAMPTZ,
-  deleted_by  TEXT
+  deleted_by  TEXT,
+  hidden      BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS replies (
@@ -21,8 +22,13 @@ CREATE TABLE IF NOT EXISTS replies (
   content     TEXT NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at  TIMESTAMPTZ,
-  deleted_by  TEXT
+  deleted_by  TEXT,
+  hidden      BOOLEAN NOT NULL DEFAULT false
 );
+
+-- 이미 배포된 DB에 새 컬럼을 추가하기 위한 안전한 재실행용 구문
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE replies ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS reactions (
   id             SERIAL PRIMARY KEY,

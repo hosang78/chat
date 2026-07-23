@@ -106,6 +106,16 @@
         ws.send(JSON.stringify({ type: 'delete', target: 'reply', id: reply.id }));
       });
       actions.appendChild(delBtn);
+
+      const hideBtn = document.createElement('button');
+      hideBtn.className = 'delete-btn';
+      hideBtn.textContent = '삭제후숨기기';
+      hideBtn.addEventListener('click', () => {
+        if (!confirm('이 답글을 완전히 숨기시겠어요? 흔적 없이 목록에서 사라집니다.')) return;
+        ws.send(JSON.stringify({ type: 'delete', target: 'reply', id: reply.id, hidden: true }));
+      });
+      actions.appendChild(hideBtn);
+
       el.appendChild(actions);
     }
     return el;
@@ -168,6 +178,15 @@
         ws.send(JSON.stringify({ type: 'delete', target: 'message', id: message.id }));
       });
       actions.appendChild(delBtn);
+
+      const hideBtn = document.createElement('button');
+      hideBtn.className = 'delete-btn';
+      hideBtn.textContent = '삭제후숨기기';
+      hideBtn.addEventListener('click', () => {
+        if (!confirm('이 메시지를 완전히 숨기시겠어요? 흔적 없이 목록에서 사라집니다.')) return;
+        ws.send(JSON.stringify({ type: 'delete', target: 'message', id: message.id, hidden: true }));
+      });
+      actions.appendChild(hideBtn);
     }
 
     root.appendChild(actions);
@@ -225,15 +244,24 @@
     ref.dislikeBtn.textContent = `👎 ${dislikes}`;
   }
 
-  function markDeleted(target, id) {
+  function markDeleted(target, id, hidden) {
     if (target === 'message') {
       const ref = messageEls.get(id);
       if (!ref) return;
+      if (hidden) {
+        ref.root.remove();
+        messageEls.delete(id);
+        return;
+      }
       ref.root.classList.add('deleted');
       ref.content.textContent = '관리자에 의해 삭제된 메시지입니다.';
     } else {
       const el = messageList.querySelector(`.reply[data-id="${id}"]`);
       if (!el) return;
+      if (hidden) {
+        el.remove();
+        return;
+      }
       el.classList.add('deleted');
       el.querySelector('.message-content').textContent = '삭제된 답글입니다.';
     }
@@ -250,7 +278,7 @@
       if (data.type === 'chat') appendMessage(data.message);
       else if (data.type === 'reply') appendReply(data.reply);
       else if (data.type === 'reaction') updateReaction(data.messageId, data.likes, data.dislikes);
-      else if (data.type === 'delete') markDeleted(data.target, data.id);
+      else if (data.type === 'delete') markDeleted(data.target, data.id, data.hidden);
       else if (data.type === 'error') alert(data.error);
     });
 

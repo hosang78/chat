@@ -120,6 +120,7 @@ app.get(
              COALESCE(SUM(CASE WHEN r.reaction_type = 'dislike' THEN 1 ELSE 0 END), 0)::int AS dislikes
       FROM messages m
       LEFT JOIN reactions r ON r.message_id = m.id
+      WHERE m.hidden = false
       GROUP BY m.id
       ORDER BY m.created_at ASC
       LIMIT 300
@@ -132,7 +133,7 @@ app.get(
                   CASE WHEN deleted_at IS NULL THEN content ELSE NULL END AS content,
                   created_at, deleted_at
            FROM replies
-           WHERE message_id = ANY($1)
+           WHERE message_id = ANY($1) AND hidden = false
            ORDER BY created_at ASC`,
           [messageIds]
         )
@@ -292,11 +293,12 @@ async function handleClientMessage(ws, client, liveSession, msg) {
     const target = msg.target === 'reply' ? 'replies' : 'messages';
     const id = Number(msg.id);
     if (!id) return;
-    await pool.query(`UPDATE ${target} SET deleted_at = now(), deleted_by = $2 WHERE id = $1`, [
-      id,
-      liveSession.nickname,
-    ]);
-    broadcast({ type: 'delete', target: msg.target === 'reply' ? 'reply' : 'message', id });
+    const hide = Boolean(msg.hidden);
+    await pool.query(
+      `UPDATE ${target} SET deleted_at = now(), deleted_by = $2, hidden = $3 WHERE id = $1`,
+      [id, liveSession.nickname, hide]
+    );
+    broadcast({ type: 'delete', target: msg.target === 'reply' ? 'reply' : 'message', id, hidden: hide });
     return;
   }
 }
