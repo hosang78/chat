@@ -152,7 +152,38 @@ button {
   border-bottom: 1px solid var(--border);
 }
 
+.header-left { display: flex; align-items: center; gap: 8px; }
 .header-actions { display: flex; gap: 4px; }
+
+.conn-status {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.conn-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  display: inline-block;
+}
+
+.conn-status.online { color: #0e9f6e; }
+.conn-status.online::before { background: #0e9f6e; }
+
+.conn-status.connecting { color: var(--admin); }
+.conn-status.connecting::before { background: var(--admin); }
+
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 6px 16px;
+  margin: 0;
+}
 
 .nickname { font-weight: 700; }
 .nickname.admin-name { color: var(--admin); }

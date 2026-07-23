@@ -22,9 +22,10 @@
       </p>
       <form id="login-form">
         <input type="password" id="password-input" placeholder="비밀번호" autocomplete="off" required />
-        <button type="submit">입장하기</button>
+        <button type="submit" id="login-submit-btn">입장하기</button>
       </form>
       <p id="login-error" class="error"></p>
+      <p id="login-waiting" class="hint hidden">서버를 깨우는 중입니다. 최대 1분 정도 걸릴 수 있어요...</p>
     </div>
   </div>
 
@@ -33,7 +34,10 @@
     <header class="chat-header">
       <div class="brand-bar">⚓ 블라인드 채팅방</div>
       <div class="header-top">
-        <span id="my-nickname" class="nickname"></span>
+        <div class="header-left">
+          <span id="my-nickname" class="nickname"></span>
+          <span id="conn-status" class="conn-status"></span>
+        </div>
         <div class="header-actions">
           <button id="edit-nickname-btn" class="link-btn">닉네임 변경</button>
           <button id="logout-btn" class="link-btn">로그아웃</button>
@@ -47,6 +51,7 @@
 
     <main id="message-list" class="message-list"></main>
 
+    <p id="send-status" class="hint hidden"></p>
     <div id="emoji-panel" class="emoji-panel hidden"></div>
     <form id="chat-form" class="chat-form">
       <button type="button" id="emoji-toggle-btn" class="icon-btn">😊</button>

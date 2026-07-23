@@ -4,12 +4,16 @@
   const loginForm = document.getElementById('login-form');
   const passwordInput = document.getElementById('password-input');
   const loginError = document.getElementById('login-error');
+  const loginSubmitBtn = document.getElementById('login-submit-btn');
+  const loginWaiting = document.getElementById('login-waiting');
   const myNicknameEl = document.getElementById('my-nickname');
+  const connStatusEl = document.getElementById('conn-status');
   const editNicknameBtn = document.getElementById('edit-nickname-btn');
   const logoutBtn = document.getElementById('logout-btn');
   const messageList = document.getElementById('message-list');
   const chatForm = document.getElementById('chat-form');
   const chatInput = document.getElementById('chat-input');
+  const sendStatus = document.getElementById('send-status');
   const emojiToggleBtn = document.getElementById('emoji-toggle-btn');
   const emojiPanel = document.getElementById('emoji-panel');
 
@@ -269,9 +273,40 @@
 
   let loggedOut = false;
 
+  function setConnStatus(state) {
+    connStatusEl.classList.remove('online', 'connecting');
+    if (state === 'online') {
+      connStatusEl.classList.add('online');
+      connStatusEl.textContent = '연결됨';
+    } else {
+      connStatusEl.classList.add('connecting');
+      connStatusEl.textContent = '연결 중...';
+    }
+  }
+
+  let pendingChatText = null;
+
   function connectWebSocket() {
+    setConnStatus('connecting');
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${protocol}://${location.host}/ws`);
+
+    ws.addEventListener('open', () => {
+      setConnStatus('online');
+      if (pendingChatText) {
+        const textToSend = pendingChatText;
+        ws.send(JSON.stringify({ type: 'chat', content: textToSend }));
+        // 전송 직후 연결이 곧바로 끊길 수 있어(세션 만료 등) 잠시 뒤 연결이
+        // 살아있는 걸 확인하고서야 성공으로 간주해 초안을 지운다.
+        setTimeout(() => {
+          if (pendingChatText === textToSend && ws && ws.readyState === WebSocket.OPEN) {
+            pendingChatText = null;
+            chatInput.value = '';
+            sendStatus.classList.add('hidden');
+          }
+        }, 1000);
+      }
+    });
 
     ws.addEventListener('message', (event) => {
       const data = JSON.parse(event.data);
@@ -282,7 +317,13 @@
       else if (data.type === 'error') alert(data.error);
     });
 
-    ws.addEventListener('close', () => {
+    ws.addEventListener('close', (event) => {
+      if (event.code === 4001) {
+        // 서버가 재시작되어 세션이 사라진 경우 (예: 무료 플랜 슬립 후 재기동)
+        resetToLoginView('세션이 만료되었습니다. 서버가 재시작되었을 수 있어요 — 비밀번호를 다시 입력해주세요.');
+        return;
+      }
+      setConnStatus('connecting');
       if (!loggedOut) setTimeout(connectWebSocket, 2000);
     });
   }
@@ -310,18 +351,29 @@
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.textContent = '';
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: passwordInput.value }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      loginError.textContent = data.error || '입장에 실패했습니다.';
-      return;
+    loginSubmitBtn.disabled = true;
+    loginSubmitBtn.textContent = '입장 중...';
+    loginWaiting.classList.remove('hidden');
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput.value }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        loginError.textContent = data.error || '입장에 실패했습니다.';
+        return;
+      }
+      const data = await res.json();
+      await enterChat(data.nickname, data.isAdmin);
+    } catch (err) {
+      loginError.textContent = '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
+    } finally {
+      loginSubmitBtn.disabled = false;
+      loginSubmitBtn.textContent = '입장하기';
+      loginWaiting.classList.add('hidden');
     }
-    const data = await res.json();
-    enterChat(data.nickname, data.isAdmin);
   });
 
   editNicknameBtn.addEventListener('click', async () => {
@@ -341,29 +393,43 @@
     renderNicknameHeader();
   });
 
-  logoutBtn.addEventListener('click', async () => {
-    if (!confirm('로그아웃하시겠어요?')) return;
+  function resetToLoginView(message) {
     loggedOut = true;
-    await fetch('/api/logout', { method: 'POST' }).catch(() => {});
     if (ws) {
       ws.close();
       ws = null;
     }
+    const hadUnsentDraft = Boolean(pendingChatText);
+    pendingChatText = null;
     messageList.innerHTML = '';
     messageEls.clear();
-    chatInput.value = '';
+    if (!hadUnsentDraft) chatInput.value = ''; // 보내지 못한 초안은 재입장 후 이어 쓸 수 있게 남겨둠
     passwordInput.value = '';
+    sendStatus.classList.add('hidden');
     myNickname = '';
     isAdmin = false;
     chatView.classList.add('hidden');
     loginView.classList.remove('hidden');
+    loginError.textContent = message || '';
+  }
+
+  logoutBtn.addEventListener('click', async () => {
+    if (!confirm('로그아웃하시겠어요?')) return;
+    await fetch('/api/logout', { method: 'POST' }).catch(() => {});
+    resetToLoginView();
   });
 
   chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
     emojiPanel.classList.add('hidden');
     const text = chatInput.value.trim();
-    if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!text) return;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      pendingChatText = text;
+      sendStatus.textContent = '🔌 서버에 연결하는 중입니다. 연결되면 자동으로 전송돼요...';
+      sendStatus.classList.remove('hidden');
+      return;
+    }
     ws.send(JSON.stringify({ type: 'chat', content: text }));
     chatInput.value = '';
   });
