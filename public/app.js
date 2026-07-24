@@ -370,9 +370,15 @@
       }
     }, 8000);
 
-    ws.addEventListener('open', () => {
+    ws.addEventListener('open', async () => {
       clearTimeout(connectTimeout);
       setConnStatus('online');
+      // 끊겨있던 동안 놓친 메시지가 있을 수 있으니 재연결 시 목록을 다시 불러와 맞춘다.
+      try {
+        await loadMessages();
+      } catch (err) {
+        console.error('메시지 목록 재조회 실패:', err);
+      }
       sendReadReceipt(latestRenderedMessageId);
       if (pendingChatText) {
         const textToSend = pendingChatText;
