@@ -360,7 +360,18 @@
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${protocol}://${location.host}/ws`);
 
+    // 네트워크 상황(방화벽/프록시가 WebSocket 업그레이드만 조용히 막는 경우 등)에
+    // 따라 연결 시도가 open도 close도 안 된 채 멈춰버릴 수 있다. close 이벤트에만
+    // 재시도를 의존하면 이 경우 영원히 멈추므로, 일정 시간 안에 열리지 않으면
+    // 강제로 닫아 재시도가 걸리도록 한다.
+    const connectTimeout = setTimeout(() => {
+      if (ws && ws.readyState !== WebSocket.OPEN) {
+        ws.close();
+      }
+    }, 8000);
+
     ws.addEventListener('open', () => {
+      clearTimeout(connectTimeout);
       setConnStatus('online');
       sendReadReceipt(latestRenderedMessageId);
       if (pendingChatText) {
@@ -390,6 +401,7 @@
     });
 
     ws.addEventListener('close', (event) => {
+      clearTimeout(connectTimeout);
       if (event.code === 4001) {
         // 서버가 재시작되어 세션이 사라진 경우 (예: 무료 플랜 슬립 후 재기동)
         resetToLoginView('세션이 만료되었습니다. 서버가 재시작되었을 수 있어요 — 비밀번호를 다시 입력해주세요.');
