@@ -344,6 +344,21 @@ async function handleClientMessage(ws, client, liveSession, msg) {
     broadcast({ type: 'delete', target: msg.target === 'reply' ? 'reply' : 'message', id, hidden: hide });
     return;
   }
+
+  if (msg.type === 'clear-all') {
+    if (!liveSession.isAdmin) return;
+    await pool.query(
+      `UPDATE replies SET deleted_at = now(), deleted_by = $1, hidden = true WHERE hidden = false`,
+      [liveSession.nickname]
+    );
+    await pool.query(
+      `UPDATE messages SET deleted_at = now(), deleted_by = $1, hidden = true WHERE hidden = false`,
+      [liveSession.nickname]
+    );
+    broadcast({ type: 'clear-all' });
+    await broadcastUnreadCounts();
+    return;
+  }
 }
 
 server.listen(PORT, () => {

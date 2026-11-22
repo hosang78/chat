@@ -45,6 +45,7 @@
   const presenceCountEl = document.getElementById('presence-count');
   const editNicknameBtn = document.getElementById('edit-nickname-btn');
   const logoutBtn = document.getElementById('logout-btn');
+  const clearAllBtn = document.getElementById('clear-all-btn');
   const messageList = document.getElementById('message-list');
   const chatForm = document.getElementById('chat-form');
   const chatInput = document.getElementById('chat-input');
@@ -403,6 +404,7 @@
       else if (data.type === 'delete') markDeleted(data.target, data.id, data.hidden);
       else if (data.type === 'presence') updatePresence(data.count);
       else if (data.type === 'unread-update') updateUnreadCounts(data.counts);
+      else if (data.type === 'clear-all') handleClearAll();
       else if (data.type === 'error') alert(data.error);
     });
 
@@ -426,12 +428,21 @@
     data.messages.forEach(appendMessage);
   }
 
+  async function handleClearAll() {
+    await loadMessages();
+    const notice = document.createElement('p');
+    notice.className = 'hint';
+    notice.textContent = '⚠️ 관리자가 채팅방 내용을 전체 삭제했습니다.';
+    messageList.appendChild(notice);
+  }
+
   async function enterChat(nickname, admin) {
     loggedOut = false;
     myNickname = nickname;
     isAdmin = admin;
     renderNicknameHeader();
     editNicknameBtn.classList.toggle('hidden', isAdmin);
+    clearAllBtn.classList.toggle('hidden', !isAdmin);
     loginView.classList.add('hidden');
     chatView.classList.remove('hidden');
     await loadMessages();
@@ -481,6 +492,16 @@
     }
     myNickname = data.nickname;
     renderNicknameHeader();
+  });
+
+  clearAllBtn.addEventListener('click', () => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      alert('서버와 연결이 끊겨있어 지금은 실행할 수 없습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    if (!confirm('정말로 현재 채팅방의 모든 메시지를 삭제하시겠어요?\n되돌릴 수 없습니다.')) return;
+    if (!confirm('마지막 확인입니다. 전체 삭제를 진행할까요?')) return;
+    ws.send(JSON.stringify({ type: 'clear-all' }));
   });
 
   function resetToLoginView(message) {

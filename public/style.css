@@ -121,6 +121,8 @@ button {
   font-size: 13px;
 }
 
+.danger-btn { color: var(--danger); }
+
 .error { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 16px; }
 
 /* 채팅 화면 */
